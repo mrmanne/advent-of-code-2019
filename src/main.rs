@@ -44,8 +44,7 @@ fn main() {
     let input_filename = format!("input/day{}.txt", day);
     let puzzle =
         days::puzzle_factory(day).unwrap_or_else(|| err_exit!("No solution found for day {}", day));
-    let lines = get_input(&input_filename)
-        .unwrap_or_else(|e| err_exit!("Failed to open file: {}, {}", &input_filename, e));
+    let lines = get_input(&input_filename);
 
     let now = Instant::now();
     let answer = puzzle.solve(lines);

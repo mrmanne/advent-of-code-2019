@@ -168,8 +168,8 @@ impl Day3 {
 }
 
 impl Puzzle for Day3 {
-    fn solve(&self, lines: io::Lines<io::BufReader<File>>) -> (String, String) {
-        let mut lines = lines.map(|l| l.unwrap());
+    fn solve(&self, lines: io::Result<io::Lines<io::BufReader<File>>>) -> (String, String) {
+        let mut lines = lines.expect("No input file").map(|l| l.unwrap());
         let wire1_input = lines
             .nth(0)
             .unwrap()

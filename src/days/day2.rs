@@ -78,8 +78,9 @@ impl Day2 {
 }
 
 impl Puzzle for Day2 {
-    fn solve(&self, lines: io::Lines<io::BufReader<File>>) -> (String, String) {
+    fn solve(&self, lines: io::Result<io::Lines<io::BufReader<File>>>) -> (String, String) {
         let mut mem: Vec<usize> = lines
+            .expect("No input file")
             .map(|l| l.unwrap())
             .collect::<String>()
             .split(",")

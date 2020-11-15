@@ -33,8 +33,11 @@ impl Day1 {
 }
 
 impl Puzzle for Day1 {
-    fn solve(&self, lines: io::Lines<io::BufReader<File>>) -> (String, String) {
-        let numbers: Vec<u64> = lines.map(|l| l.unwrap().parse::<u64>().unwrap()).collect();
+    fn solve(&self, lines: io::Result<io::Lines<io::BufReader<File>>>) -> (String, String) {
+        let numbers: Vec<u64> = lines
+            .expect("No input file")
+            .map(|l| l.unwrap().parse::<u64>().unwrap())
+            .collect();
         return (self.solve_part1(&numbers), self.solve_part2(&numbers));
     }
 }

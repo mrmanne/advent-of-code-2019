@@ -51,5 +51,5 @@ fn main() {
     let elapsed = now.elapsed().as_millis();
     println!("First answer found: {}", answer.0);
     println!("Second answer found: {}", answer.1);
-    println!("Execution time: {}", elapsed);
+    println!("Execution time: {} ms", elapsed);
 }

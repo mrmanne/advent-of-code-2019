@@ -5,6 +5,7 @@ use std::path::Path;
 use std::process;
 use std::time::Instant;
 
+mod computer;
 mod days;
 mod puzzle;
 

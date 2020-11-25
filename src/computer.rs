@@ -18,7 +18,7 @@ enum OpCode {
 pub struct Computer {
     pc: usize,
     mem: Vec<i64>,
-    input: i64,
+    inputs: Vec<i64>,
     output: i64,
 }
 
@@ -27,7 +27,7 @@ impl Computer {
         Self {
             pc: 0,
             mem: mem,
-            input: 0,
+            inputs: vec![],
             output: 0,
         }
     }
@@ -97,7 +97,7 @@ impl Computer {
             _ => Err("Illegal opcode"),
         }
     }
-    fn execute_instruction(&mut self) -> bool {
+    fn execute_instruction(&mut self) -> OpCode {
         let pc_start = self.pc;
         let (opcode, size) = self.decode_instruction().unwrap();
         match opcode {
@@ -108,10 +108,10 @@ impl Computer {
                 self.mem[r] = a * b;
             }
             OpCode::Input { r } => {
-                self.mem[r] = self.input;
+                self.mem[r] = self.inputs.remove(0);
             }
             OpCode::Output { a } => {
-                println!("output: {}", a);
+                //println!("output: {}", a);
                 self.output = a;
             }
             OpCode::JumpIfTrue { a, d } => {
@@ -130,18 +130,34 @@ impl Computer {
             OpCode::Equals { a, b, r } => {
                 self.mem[r] = if a == b { 1 } else { 0 };
             }
-            OpCode::Halt => return true,
+            OpCode::Halt => return opcode,
         }
         // Don't increment PC for jump instructions that modify PC by them selves.
         if self.pc == pc_start {
             self.pc += size;
         }
-        return false;
+        return opcode;
     }
-    pub fn run_program(&mut self, input: i64) -> i64 {
-        self.input = input;
-        while !self.execute_instruction() {}
+    pub fn run_program(&mut self, inputs: Vec<i64>) -> i64 {
+        self.inputs = inputs;
+        loop {
+            match self.execute_instruction() {
+                OpCode::Halt => break,
+                _ => (),
+            }
+        }
         self.output
+    }
+    // Returns (halted(bool), output)
+    pub fn run_until_output(&mut self, inputs: Vec<i64>) -> (bool, i64) {
+        self.inputs = inputs;
+        loop {
+            match self.execute_instruction() {
+                OpCode::Halt => return (true, self.output),
+                OpCode::Output { a: _ } => return (false, self.output),
+                _ => (),
+            }
+        }
     }
     fn get_param(&self, index: usize, raw: bool) -> i64 {
         let flag =
@@ -167,61 +183,61 @@ mod tests {
     #[test]
     fn input_output() {
         let program = vec![3, 0, 4, 0, 99];
-        assert_eq!(Computer::new(program.clone()).run_program(333), 333);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(333)), 333);
     }
 
     #[test]
     fn mul_immediate() {
         let program = vec![1002, 7, 3, 0, 4, 0, 99, 33];
-        assert_eq!(Computer::new(program.clone()).run_program(1), 99);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(1)), 99);
     }
 
     #[test]
     fn add_immediate() {
         let program = vec![1101, 100, -5, 0, 4, 0, 99];
-        assert_eq!(Computer::new(program.clone()).run_program(1), 95);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(1)), 95);
     }
 
     #[test]
     fn equal_to_8_position() {
         let program = vec![3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8];
-        assert_eq!(Computer::new(program.clone()).run_program(8), 1);
-        assert_eq!(Computer::new(program.clone()).run_program(7), 0);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(8)), 1);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(7)), 0);
     }
 
     #[test]
     fn less_than_8_position() {
         let program = vec![3, 9, 7, 9, 10, 9, 4, 9, 99, -1, 8];
-        assert_eq!(Computer::new(program.clone()).run_program(7), 1);
-        assert_eq!(Computer::new(program.clone()).run_program(8), 0);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(7)), 1);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(8)), 0);
     }
 
     #[test]
     fn equal_to_8_immediate() {
         let program = vec![3, 3, 1108, -1, 8, 3, 4, 3, 99];
-        assert_eq!(Computer::new(program.clone()).run_program(8), 1);
-        assert_eq!(Computer::new(program.clone()).run_program(7), 0);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(8)), 1);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(7)), 0);
     }
 
     #[test]
     fn less_than_8_immediate() {
         let program = vec![3, 3, 1107, -1, 8, 3, 4, 3, 99];
-        assert_eq!(Computer::new(program.clone()).run_program(7), 1);
-        assert_eq!(Computer::new(program.clone()).run_program(8), 0);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(7)), 1);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(8)), 0);
     }
 
     #[test]
     fn jump_if_true_position() {
         let program = vec![3, 12, 6, 12, 15, 1, 13, 14, 13, 4, 13, 99, -1, 0, 1, 9];
-        assert_eq!(Computer::new(program.clone()).run_program(0), 0);
-        assert_eq!(Computer::new(program.clone()).run_program(3), 1);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(0)), 0);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(3)), 1);
     }
 
     #[test]
     fn jump_if_true_immediate() {
         let program = vec![3, 3, 1105, -1, 9, 1101, 0, 0, 12, 4, 12, 99, 1];
-        assert_eq!(Computer::new(program.clone()).run_program(0), 0);
-        assert_eq!(Computer::new(program.clone()).run_program(3), 1);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(0)), 0);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(3)), 1);
     }
 
     #[test]
@@ -231,8 +247,8 @@ mod tests {
             0, 1002, 21, 125, 20, 4, 20, 1105, 1, 46, 104, 999, 1105, 1, 46, 1101, 1000, 1, 20, 4,
             20, 1105, 1, 46, 98, 99,
         ];
-        assert_eq!(Computer::new(program.clone()).run_program(7), 999);
-        assert_eq!(Computer::new(program.clone()).run_program(8), 1000);
-        assert_eq!(Computer::new(program.clone()).run_program(9), 1001);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(7)), 999);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(8)), 1000);
+        assert_eq!(Computer::new(program.clone()).run_program(vec!(9)), 1001);
     }
 }

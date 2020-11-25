@@ -5,7 +5,7 @@ pub struct Day5;
 impl Day5 {
     fn solve(&self, mem: &Vec<i64>, input: i64) -> i64 {
         let mut c = crate::computer::Computer::new(mem.clone());
-        c.run_program(input)
+        c.run_program(vec![input])
     }
 }
 

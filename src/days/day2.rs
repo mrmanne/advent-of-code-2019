@@ -5,7 +5,7 @@ pub struct Day2;
 impl Day2 {
     fn solve_part1(&self, mem: &Vec<i64>) -> Vec<i64> {
         let mut c = crate::computer::Computer::new(mem.clone());
-        c.run_program(0);
+        c.run_program(vec![0]);
         c.mem().clone()
     }
 
@@ -16,7 +16,7 @@ impl Day2 {
                 mem[1] = noun;
                 mem[2] = verb;
                 let mut c = crate::computer::Computer::new(mem);
-                c.run_program(0);
+                c.run_program(vec![0]);
                 if c.mem()[0] == 19690720 {
                     return Ok((100 * noun + verb).to_string());
                 }
